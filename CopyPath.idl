@@ -1,0 +1,36 @@
+﻿// CopyPath.idl: CopyPath 的 IDL 源
+//
+
+// 此文件将由 MIDL 工具处理以
+// 生成类型库(CopyPath.tlb)和封送处理代码。
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+	object,
+	uuid(f3f2beba-49a0-4661-857e-bbff00a12889),
+	dual,
+	nonextensible,
+	pointer_default(unique)
+]
+interface ICopyPathMenu : IDispatch
+{
+};
+[
+	uuid(ece137e8-a6e1-40ff-9566-fcb874f9670a),
+	version(1.0),
+]
+library CopyPathLib
+{
+	importlib("stdole2.tlb");
+	[
+		uuid(b15b51a1-607e-453d-8b63-297e9b366d04)
+	]
+	coclass CopyPathMenu
+	{
+		[default] interface ICopyPathMenu;
+	};
+};
+
+import "shobjidl.idl";

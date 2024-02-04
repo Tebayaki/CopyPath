@@ -1,0 +1,56 @@
+HKCR
+{
+	NoRemove CLSID
+	{
+		ForceRemove {b15b51a1-607e-453d-8b63-297e9b366d04} = s 'CopyPathMenu class'
+		{
+			ForceRemove Programmable
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+			TypeLib = s '{ece137e8-a6e1-40ff-9566-fcb874f9670a}'
+			Version = s '1.0'
+		}
+	}
+	NoRemove *
+	{
+		NoRemove ShellEx
+		{
+			NoRemove ContextMenuHandlers
+			{
+				CopyPath = s '{b15b51a1-607e-453d-8b63-297e9b366d04}'
+			}
+		}
+	}
+	NoRemove Directory
+	{
+		NoRemove ShellEx
+		{
+			NoRemove ContextMenuHandlers
+			{
+				CopyPath = s '{b15b51a1-607e-453d-8b63-297e9b366d04}'
+			}
+		}
+		NoRemove Background
+		{
+			NoRemove ShellEx
+			{
+				NoRemove ContextMenuHandlers
+				{
+					CopyPath = s '{b15b51a1-607e-453d-8b63-297e9b366d04}'
+				}
+			}
+		}
+	}
+	NoRemove Folder
+	{
+		NoRemove ShellEx
+		{
+			NoRemove ContextMenuHandlers
+			{
+				CopyPath = s '{b15b51a1-607e-453d-8b63-297e9b366d04}'
+			}
+		}
+	}
+}
