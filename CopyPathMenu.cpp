@@ -90,7 +90,13 @@ STDMETHODIMP CCopyPathMenu::InvokeCommand(CMINVOKECOMMANDINFO *pici) {
             }
             break;
         case COPYPATH_MENUITEMID_WINSLSH:
-            buf__.clear();
+        case COPYPATH_MENUITEMID_FILEPROTOCAL:
+            if (LOWORD(pici->lpVerb) == COPYPATH_MENUITEMID_FILEPROTOCAL) {
+                buf__.assign(L"file:///");
+            }
+            else {
+                buf__.clear();
+            }
             for (size_t i = 0; i < size; i++) {
                 size_t len = paths__[i].size - 1;
                 for (size_t i2 = 0; i2 < len; i2++) {
@@ -189,9 +195,10 @@ STDMETHODIMP CCopyPathMenu::QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT i
     HMENU hSubMenu = CreatePopupMenu();
     AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_WIN, L"(&A) C:\\DIR\\NAME");
     AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_WINSLSH, L"(&S) C:/DIR/NAME");
-    AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_WINESCAPE, L"(&D) C:\\\\DIR\\\\NAME");
-    AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_UNIX, L"(&F) /C/DIR/NAME");
-    AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_NAME, L"(&G) NAME");
+    AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_FILEPROTOCAL, L"(&D) file:///C:/DIR/NAME");
+    AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_WINESCAPE, L"(&F) C:\\\\DIR\\\\NAME");
+    AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_UNIX, L"(&G) /C/DIR/NAME");
+    AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_NAME, L"(&Q) NAME");
 
     const BYTE bits[] = {0xff, 0xff, 0xf8, 0x1f, 0xe2, 0x47, 0xef, 0xf7, 0xef, 0xf7, 0xe8, 0x77, 0xef, 0xf7, 0xe8, 0x17, 0xef, 0xf7, 0xe8, 0x17, 0xef, 0xf7, 0xe8, 0xf7, 0xef, 0xe7, 0xe0, 0x07, 0xff, 0xff, 0xff, 0xff};
     hIcon__ = CreateBitmap(16, 16, 1, 1, bits);
