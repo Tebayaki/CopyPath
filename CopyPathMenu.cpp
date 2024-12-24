@@ -91,13 +91,11 @@ STDMETHODIMP CCopyPathMenu::InvokeCommand(CMINVOKECOMMANDINFO *pici) {
             break;
         case COPYPATH_MENUITEMID_WINSLSH:
         case COPYPATH_MENUITEMID_FILEPROTOCAL:
-            if (LOWORD(pici->lpVerb) == COPYPATH_MENUITEMID_FILEPROTOCAL) {
-                buf__.assign(L"file:///");
-            }
-            else {
-                buf__.clear();
-            }
+            buf__.clear();
             for (size_t i = 0; i < size; i++) {
+                if (LOWORD(pici->lpVerb) == COPYPATH_MENUITEMID_FILEPROTOCAL) {
+                    buf__.append(L"file:///");
+                }
                 size_t len = paths__[i].size - 1;
                 for (size_t i2 = 0; i2 < len; i2++) {
                     WCHAR c = paths__[i].buf[i2];
