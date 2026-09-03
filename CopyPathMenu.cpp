@@ -66,6 +66,15 @@ STDMETHODIMP CCopyPathMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject
     return S_OK;
 }
 
+// Helper: truncate a wide string in the middle with ellipsis so total length <= maxLen
+static std::wstring TruncateMiddle(const std::wstring &s, size_t maxLen) {
+    if (s.size() <= maxLen) return s;
+    if (maxLen <= 1) return s.substr(0, maxLen);
+    size_t keepLeft = (maxLen - 1) / 2;
+    size_t keepRight = (maxLen - 1) - keepLeft;
+    return s.substr(0, keepLeft) + L'…' + s.substr(s.size() - keepRight);
+}
+
 STDMETHODIMP CCopyPathMenu::InvokeCommand(CMINVOKECOMMANDINFO *pici) {
     if (HIWORD(pici->lpVerb) != 0) {
         return E_INVALIDARG;
@@ -206,47 +215,56 @@ STDMETHODIMP CCopyPathMenu::QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT i
         return out;
     };
 
+    // Build variants (keep raw path separately and apply truncation to the displayed part)
+    std::wstring rawPath = firstPath;
+    std::wstring winslash = replace_char(rawPath, L'\\', L'/');
+
     // (&A) C:\DIR\NAME
-    std::wstring winLabel = L"(&A) " + firstPath;
+    const std::wstring prefixA = L"(&A) ";
+    std::wstring winLabel = prefixA + TruncateMiddle(rawPath, MAX_LABEL_LEN);
 
     // (&S) C:/DIR/NAME
-    std::wstring winslash = replace_char(firstPath, L'\\', L'/');
-    std::wstring winslashLabel = L"(&S) " + winslash;
+    const std::wstring prefixS = L"(&S) ";
+    std::wstring winslashLabel = prefixS + TruncateMiddle(winslash, MAX_LABEL_LEN);
 
     // (&D) file:///C:/DIR/NAME
-    std::wstring fileProtoLabel = L"(&D) file:///" + winslash;
+    const std::wstring prefixD = L"(&D) ";
+    std::wstring fileProtoLabel = prefixD + TruncateMiddle(L"file:///" + winslash, MAX_LABEL_LEN);
 
     // (&F) C:\\DIR\\NAME  (escaped backslashes)
     std::wstring winEscaped;
-    for (WCHAR c : firstPath) {
+    for (WCHAR c : rawPath) {
         if (c == L'\\') {
             winEscaped.append(L"\\\\");
         } else {
             winEscaped.push_back(c);
         }
     }
-    std::wstring winEscapedLabel = L"(&F) " + winEscaped;
+    const std::wstring prefixF = L"(&F) ";
+    std::wstring winEscapedLabel = prefixF + TruncateMiddle(winEscaped, MAX_LABEL_LEN);
 
     // (&G) /C/DIR/NAME
     std::wstring unixPath;
-    size_t len = firstPath.length();
+    size_t len = rawPath.length();
     size_t i2 = 0;
-    if (len >= 2 && firstPath[1] == L':') {
+    if (len >= 2 && rawPath[1] == L':') {
         unixPath.push_back(L'/');
-        unixPath.push_back(firstPath[0]);
+        unixPath.push_back(rawPath[0]);
         i2 = 2;
     }
     for (; i2 < len; i2++) {
-        WCHAR c = firstPath[i2];
+        WCHAR c = rawPath[i2];
         if (c == L'\\') unixPath.push_back(L'/');
         else unixPath.push_back(c);
     }
-    std::wstring unixLabel = L"(&G) " + unixPath;
+    const std::wstring prefixG = L"(&G) ";
+    std::wstring unixLabel = prefixG + TruncateMiddle(unixPath, MAX_LABEL_LEN);
 
     // (&Q) NAME
-    size_t pos = firstPath.find_last_of(L'\\');
-    std::wstring namePart = (pos == std::wstring::npos) ? firstPath : firstPath.substr(pos + 1);
-    std::wstring nameLabel = L"(&Q) " + namePart;
+    size_t pos = rawPath.find_last_of(L'\\');
+    std::wstring namePart = (pos == std::wstring::npos) ? rawPath : rawPath.substr(pos + 1);
+    const std::wstring prefixQ = L"(&Q) ";
+    std::wstring nameLabel = prefixQ + TruncateMiddle(namePart, MAX_LABEL_LEN);
 
     AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_WIN, winLabel.c_str());
     AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_WINSLSH, winslashLabel.c_str());

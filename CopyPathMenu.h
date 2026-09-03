@@ -21,6 +21,8 @@ enum {
     COPYPATH_MENUITEMID_NEXT
 };
 
+#define MAX_LABEL_LEN 41
+
 BOOL SetClipboardTextW(const WCHAR *text, SIZE_T cch);
 
 // CCopyPathMenu
