@@ -191,12 +191,69 @@ STDMETHODIMP CCopyPathMenu::QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT i
     }
 
     HMENU hSubMenu = CreatePopupMenu();
-    AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_WIN, L"(&A) C:\\DIR\\NAME");
-    AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_WINSLSH, L"(&S) C:/DIR/NAME");
-    AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_FILEPROTOCAL, L"(&D) file:///C:/DIR/NAME");
-    AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_WINESCAPE, L"(&F) C:\\\\DIR\\\\NAME");
-    AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_UNIX, L"(&G) /C/DIR/NAME");
-    AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_NAME, L"(&Q) NAME");
+
+    // Prepare display strings using the first selected path (if available)
+    std::wstring firstPath = L"";
+    if (!paths__.empty()) {
+        firstPath = paths__[0].buf;
+    }
+
+    auto replace_char = [](const std::wstring &s, WCHAR from, WCHAR to) {
+        std::wstring out = s;
+        for (WCHAR &c : out) {
+            if (c == from) c = to;
+        }
+        return out;
+    };
+
+    // (&A) C:\DIR\NAME
+    std::wstring winLabel = L"(&A) " + firstPath;
+
+    // (&S) C:/DIR/NAME
+    std::wstring winslash = replace_char(firstPath, L'\\', L'/');
+    std::wstring winslashLabel = L"(&S) " + winslash;
+
+    // (&D) file:///C:/DIR/NAME
+    std::wstring fileProtoLabel = L"(&D) file:///" + winslash;
+
+    // (&F) C:\\DIR\\NAME  (escaped backslashes)
+    std::wstring winEscaped;
+    for (WCHAR c : firstPath) {
+        if (c == L'\\') {
+            winEscaped.append(L"\\\\");
+        } else {
+            winEscaped.push_back(c);
+        }
+    }
+    std::wstring winEscapedLabel = L"(&F) " + winEscaped;
+
+    // (&G) /C/DIR/NAME
+    std::wstring unixPath;
+    size_t len = firstPath.length();
+    size_t i2 = 0;
+    if (len >= 2 && firstPath[1] == L':') {
+        unixPath.push_back(L'/');
+        unixPath.push_back(firstPath[0]);
+        i2 = 2;
+    }
+    for (; i2 < len; i2++) {
+        WCHAR c = firstPath[i2];
+        if (c == L'\\') unixPath.push_back(L'/');
+        else unixPath.push_back(c);
+    }
+    std::wstring unixLabel = L"(&G) " + unixPath;
+
+    // (&Q) NAME
+    size_t pos = firstPath.find_last_of(L'\\');
+    std::wstring namePart = (pos == std::wstring::npos) ? firstPath : firstPath.substr(pos + 1);
+    std::wstring nameLabel = L"(&Q) " + namePart;
+
+    AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_WIN, winLabel.c_str());
+    AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_WINSLSH, winslashLabel.c_str());
+    AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_FILEPROTOCAL, fileProtoLabel.c_str());
+    AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_WINESCAPE, winEscapedLabel.c_str());
+    AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_UNIX, unixLabel.c_str());
+    AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_NAME, nameLabel.c_str());
 
     const BYTE bits[] = {0xff, 0xff, 0xf8, 0x1f, 0xe2, 0x47, 0xef, 0xf7, 0xef, 0xf7, 0xe8, 0x77, 0xef, 0xf7, 0xe8, 0x17, 0xef, 0xf7, 0xe8, 0x17, 0xef, 0xf7, 0xe8, 0xf7, 0xef, 0xe7, 0xe0, 0x07, 0xff, 0xff, 0xff, 0xff};
     hIcon__ = CreateBitmap(16, 16, 1, 1, bits);
