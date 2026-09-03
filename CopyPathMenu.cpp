@@ -2,6 +2,7 @@
 
 #include "pch.h"
 #include "CopyPathMenu.h"
+#include "utils.h"
 
 // CCopyPathMenu
 
@@ -188,6 +189,16 @@ STDMETHODIMP CCopyPathMenu::InvokeCommand(CMINVOKECOMMANDINFO *pici) {
             buf__.back() = L'\0';
             SetClipboardTextW(buf__.c_str(), buf__.size());
             break;
+        case COPYPATH_MENUITEMID_WSL:
+            buf__.clear();
+            for (size_t i = 0; i < size; i++) {
+                std::wstring wsl = convert_path_from_win_to_wsl(paths__[i].buf);
+                buf__ += wsl;
+                buf__.push_back(L'\n');
+            }
+            buf__.back() = L'\0';
+            SetClipboardTextW(buf__.c_str(), buf__.size());
+            break;
         default:
             return E_INVALIDARG;
     }
@@ -266,12 +277,18 @@ STDMETHODIMP CCopyPathMenu::QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT i
     const std::wstring prefixQ = L"(&Q) ";
     std::wstring nameLabel = prefixQ + TruncateMiddle(namePart, MAX_LABEL_LEN);
 
+    // (&W) /mnt/c/dir/name  (WSL style)
+    const std::wstring prefixWSL = L"(&W) ";
+    std::wstring wslPathDisplay = convert_path_from_win_to_wsl(rawPath);
+    std::wstring wslLabel = prefixWSL + TruncateMiddle(wslPathDisplay, MAX_LABEL_LEN);
+
     AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_WIN, winLabel.c_str());
     AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_WINSLSH, winslashLabel.c_str());
     AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_FILEPROTOCAL, fileProtoLabel.c_str());
     AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_WINESCAPE, winEscapedLabel.c_str());
     AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_UNIX, unixLabel.c_str());
     AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_NAME, nameLabel.c_str());
+    AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_WSL, wslLabel.c_str());
 
     const BYTE bits[] = {0xff, 0xff, 0xf8, 0x1f, 0xe2, 0x47, 0xef, 0xf7, 0xef, 0xf7, 0xe8, 0x77, 0xef, 0xf7, 0xe8, 0x17, 0xef, 0xf7, 0xe8, 0x17, 0xef, 0xf7, 0xe8, 0xf7, 0xef, 0xe7, 0xe0, 0x07, 0xff, 0xff, 0xff, 0xff};
     hIcon__ = CreateBitmap(16, 16, 1, 1, bits);
