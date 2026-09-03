@@ -13,7 +13,9 @@ std::wstring convert_path_from_win_to_wsl(const std::wstring &win_path) {
         if (win_path.size() > 2 && (win_path[2] == L'\\' || win_path[2] == L'/')) idx = 3;
         for (size_t i = idx; i < win_path.size(); ++i) {
             wchar_t c = win_path[i];
-            rest.push_back(c == L'\\' ? L'/' : c);
+            if (c == L'\\') rest.push_back(L'/');
+            else if (c == L' ') { rest.push_back(L'\\'); rest.push_back(L' '); }
+            else rest.push_back(c);
         }
         std::wstring out = L"/mnt/";
         out.push_back(drive);
