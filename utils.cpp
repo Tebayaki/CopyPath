@@ -97,3 +97,37 @@ std::wstring convert_path_from_win_to_wsl(const std::wstring &win_path) {
     if (!s.empty() && s[0] != L'/') s.insert(s.begin(), L'/');
     return s;
 }
+
+// Helper: truncate a wide string in the middle with ellipsis so total length <= maxLen
+std::wstring TruncateMiddle(const std::wstring &s, size_t maxLen) {
+    if (s.size() <= maxLen) return s;
+    if (maxLen <= 1) return s.substr(0, maxLen);
+    size_t keepLeft = (maxLen - 1) / 2;
+    size_t keepRight = (maxLen - 1) - keepLeft;
+    return s.substr(0, keepLeft) + L'…' + s.substr(s.size() - keepRight);
+}
+
+BOOL SetClipboardTextW(const WCHAR *text, SIZE_T cch) {
+    if (!OpenClipboard(NULL)) {
+        return FALSE;
+    }
+    if (!EmptyClipboard()) {
+        CloseClipboard();
+        return FALSE;
+    }
+    HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, sizeof(WCHAR) * cch);
+    if (hGlobal == NULL) {
+        CloseClipboard();
+        return FALSE;
+    }
+    WCHAR *lpText = (WCHAR *)GlobalLock(hGlobal);
+    if (lpText == NULL) {
+        CloseClipboard();
+        return FALSE;
+    }
+    wmemcpy_s(lpText, cch, text, cch);
+    GlobalUnlock(hGlobal);
+    SetClipboardData(CF_UNICODETEXT, hGlobal);
+    CloseClipboard();
+    return TRUE;
+}

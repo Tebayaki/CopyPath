@@ -7,3 +7,6 @@ std::wstring convert_path_from_win_to_winescaped(const std::wstring& win_path);
 std::wstring convert_path_from_win_to_unix(const std::wstring& win_path);
 std::wstring convert_path_from_win_to_name(const std::wstring& win_path);
 std::wstring convert_path_from_win_to_wsl(const std::wstring& win_path);
+
+std::wstring TruncateMiddle(const std::wstring &s, size_t maxLen);
+BOOL SetClipboardTextW(const WCHAR *text, SIZE_T cch);

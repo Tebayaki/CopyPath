@@ -24,8 +24,6 @@ enum {
 
 #define MAX_LABEL_LEN 41
 
-BOOL SetClipboardTextW(const WCHAR *text, SIZE_T cch);
-
 // CCopyPathMenu
 
 class ATL_NO_VTABLE CCopyPathMenu : public CComObjectRootEx<CComSingleThreadModel>,

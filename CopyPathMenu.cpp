@@ -67,15 +67,6 @@ STDMETHODIMP CCopyPathMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject
     return S_OK;
 }
 
-// Helper: truncate a wide string in the middle with ellipsis so total length <= maxLen
-static std::wstring TruncateMiddle(const std::wstring &s, size_t maxLen) {
-    if (s.size() <= maxLen) return s;
-    if (maxLen <= 1) return s.substr(0, maxLen);
-    size_t keepLeft = (maxLen - 1) / 2;
-    size_t keepRight = (maxLen - 1) - keepLeft;
-    return s.substr(0, keepLeft) + L'…' + s.substr(s.size() - keepRight);
-}
-
 STDMETHODIMP CCopyPathMenu::InvokeCommand(CMINVOKECOMMANDINFO *pici) {
     if (HIWORD(pici->lpVerb) != 0) {
         return E_INVALIDARG;
@@ -190,29 +181,4 @@ STDMETHODIMP CCopyPathMenu::GetCommandString(UINT_PTR idCmd, UINT uType, UINT *p
         return S_OK;
     }
     return E_INVALIDARG;
-}
-
-BOOL SetClipboardTextW(const WCHAR *text, SIZE_T cch) {
-    if (!OpenClipboard(NULL)) {
-        return FALSE;
-    }
-    if (!EmptyClipboard()) {
-        CloseClipboard();
-        return FALSE;
-    }
-    HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, sizeof(WCHAR) * cch);
-    if (hGlobal == NULL) {
-        CloseClipboard();
-        return FALSE;
-    }
-    WCHAR *lpText = (WCHAR *)GlobalLock(hGlobal);
-    if (lpText == NULL) {
-        CloseClipboard();
-        return FALSE;
-    }
-    wmemcpy_s(lpText, cch, text, cch);
-    GlobalUnlock(hGlobal);
-    SetClipboardData(CF_UNICODETEXT, hGlobal);
-    CloseClipboard();
-    return TRUE;
 }
