@@ -71,7 +71,6 @@ STDMETHODIMP CCopyPathMenu::InvokeCommand(CMINVOKECOMMANDINFO *pici) {
     if (HIWORD(pici->lpVerb) != 0) {
         return E_INVALIDARG;
     }
-    size_t size = paths__.size();
     std::wstring paths;
     switch (LOWORD(pici->lpVerb)) {
         case COPYPATH_MENUITEMID_WIN:

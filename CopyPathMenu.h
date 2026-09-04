@@ -71,7 +71,6 @@ class ATL_NO_VTABLE CCopyPathMenu : public CComObjectRootEx<CComSingleThreadMode
     } FILEPATH;
 
     std::vector<FILEPATH> paths__;
-    std::wstring buf__;
     HBITMAP hIcon__;
 
     std::wstring ConvertPaths(std::wstring (*converter)(const std::wstring&)) {
