@@ -151,8 +151,7 @@ STDMETHODIMP CCopyPathMenu::QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT i
     AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_NAME, nameLabel.c_str());
     AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_WSL, wslLabel.c_str());
 
-    const BYTE bits[] = {0xff, 0xff, 0xf8, 0x1f, 0xe2, 0x47, 0xef, 0xf7, 0xef, 0xf7, 0xe8, 0x77, 0xef, 0xf7, 0xe8, 0x17, 0xef, 0xf7, 0xe8, 0x17, 0xef, 0xf7, 0xe8, 0xf7, 0xef, 0xe7, 0xe0, 0x07, 0xff, 0xff, 0xff, 0xff};
-    hIcon__ = CreateBitmap(16, 16, 1, 1, bits);
+    hIcon__ = CreateBitmap(COPYPATHMENU_LOGO_WIDTH, COPYPATHMENU_LOGO_HEIGHT, 1, 1, COPYPATHMENU_LOGO);
 
     MENUITEMINFOW info = {sizeof(MENUITEMINFOW)};
     info.fMask = MIIM_FTYPE | MIIM_BITMAP | MIIM_STRING | MIIM_SUBMENU;
