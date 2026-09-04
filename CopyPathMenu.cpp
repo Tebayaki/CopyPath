@@ -95,7 +95,7 @@ STDMETHODIMP CCopyPathMenu::InvokeCommand(CMINVOKECOMMANDINFO *pici) {
         default:
             return E_INVALIDARG;
     }
-    SetClipboardTextW(paths.c_str(), paths.size());
+    SetClipboardTextW(paths.c_str(), paths.size() + 1);
     return S_OK;
 }
 
