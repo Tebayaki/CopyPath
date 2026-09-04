@@ -81,127 +81,33 @@ STDMETHODIMP CCopyPathMenu::InvokeCommand(CMINVOKECOMMANDINFO *pici) {
         return E_INVALIDARG;
     }
     size_t size = paths__.size();
+    std::wstring paths;
     switch (LOWORD(pici->lpVerb)) {
         case COPYPATH_MENUITEMID_WIN:
-            if (size == 1) {
-                SetClipboardTextW(paths__[0].buf, paths__[0].size);
-            }
-            else {
-                buf__.clear();
-                for (size_t i = 0; i < size; i++) {
-                    size_t len = paths__[i].size - 1;
-                    for (size_t i2 = 0; i2 < len; i2++) {
-                        buf__.push_back(paths__[i].buf[i2]);
-                    }
-                    buf__.push_back(L'\n');
-                }
-                buf__.back() = L'\0';
-                SetClipboardTextW(buf__.c_str(), buf__.size());
-            }
+            paths = ConvertPaths(nullptr);
             break;
         case COPYPATH_MENUITEMID_WINSLSH:
+            paths = ConvertPaths(convert_path_from_win_to_winslash);
+            break;
         case COPYPATH_MENUITEMID_FILEPROTOCAL:
-            buf__.clear();
-            for (size_t i = 0; i < size; i++) {
-                if (LOWORD(pici->lpVerb) == COPYPATH_MENUITEMID_FILEPROTOCAL) {
-                    buf__.append(L"file:///");
-                }
-                size_t len = paths__[i].size - 1;
-                for (size_t i2 = 0; i2 < len; i2++) {
-                    WCHAR c = paths__[i].buf[i2];
-                    if (c == L'\\') {
-                        buf__.push_back(L'/');
-                    }
-                    else {
-                        buf__.push_back(c);
-                    }
-                }
-                buf__.push_back(L'\n');
-            }
-            buf__.back() = L'\0';
-            SetClipboardTextW(buf__.c_str(), buf__.size());
+            paths = ConvertPaths(convert_path_from_win_to_fileprotocal);
             break;
         case COPYPATH_MENUITEMID_WINESCAPE:
-            buf__.clear();
-            for (size_t i = 0; i < size; i++) {
-                size_t len = paths__[i].size - 1;
-                for (size_t i2 = 0; i2 < len; i2++) {
-                    WCHAR c = paths__[i].buf[i2];
-                    if (c == L'\\') {
-                        buf__ += L"\\\\";
-                    }
-                    else {
-                        buf__.push_back(c);
-                    }
-                }
-                buf__.push_back(L'\n');
-            }
-            buf__.back() = L'\0';
-            SetClipboardTextW(buf__.c_str(), buf__.size());
+            paths = ConvertPaths(convert_path_from_win_to_winescaped);
             break;
         case COPYPATH_MENUITEMID_UNIX:
-            buf__.clear();
-            for (size_t i = 0; i < size; i++) {
-                buf__.push_back(L'/');
-                size_t len = paths__[i].size - 1;
-                size_t i2 = 0;
-                if (len >= 2 && paths__[i].buf[1] == L':') {
-                    buf__.push_back(paths__[i].buf[0]);
-                    i2 = 2;
-                }
-                for (; i2 < len; i2++) {
-                    WCHAR c = paths__[i].buf[i2];
-                    if (c == L'\\') {
-                        buf__.push_back(L'/');
-                    }
-                    else {
-                        buf__.push_back(c);
-                    }
-                }
-                buf__.push_back(L'\n');
-            }
-            buf__.back() = L'\0';
-            SetClipboardTextW(buf__.c_str(), buf__.size());
+            paths = ConvertPaths(convert_path_from_win_to_unix);
             break;
         case COPYPATH_MENUITEMID_NAME:
-            buf__.clear();
-            for (size_t i = 0; i < size; i++) {
-                size_t len = paths__[i].size - 1;
-                if (len == 3 && paths__[i].buf[1] == L':' && paths__[i].buf[2] == L'\\') {
-                    buf__.push_back(paths__[i].buf[0]);
-                    buf__ += L":\\";
-                }
-                size_t i2 = len - 1;
-                for (;; i2--) {
-                    if (paths__[i].buf[i2] == L'\\') {
-                        ++i2;
-                        break;
-                    }
-                    if (i2 == 0) {
-                        break;
-                    }
-                }
-                for (; i2 < len; i2++) {
-                    buf__.push_back(paths__[i].buf[i2]);
-                }
-                buf__.push_back(L'\n');
-            }
-            buf__.back() = L'\0';
-            SetClipboardTextW(buf__.c_str(), buf__.size());
+            paths = ConvertPaths(convert_path_from_win_to_name);
             break;
         case COPYPATH_MENUITEMID_WSL:
-            buf__.clear();
-            for (size_t i = 0; i < size; i++) {
-                std::wstring wsl = convert_path_from_win_to_wsl(paths__[i].buf);
-                buf__ += wsl;
-                buf__.push_back(L'\n');
-            }
-            buf__.back() = L'\0';
-            SetClipboardTextW(buf__.c_str(), buf__.size());
+            paths = ConvertPaths(convert_path_from_win_to_wsl);
             break;
         default:
             return E_INVALIDARG;
     }
+    SetClipboardTextW(paths.c_str(), paths.size());
     return S_OK;
 }
 
@@ -213,22 +119,7 @@ STDMETHODIMP CCopyPathMenu::QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT i
     HMENU hSubMenu = CreatePopupMenu();
 
     // Prepare display strings using the first selected path (if available)
-    std::wstring firstPath = L"";
-    if (!paths__.empty()) {
-        firstPath = paths__[0].buf;
-    }
-
-    auto replace_char = [](const std::wstring &s, WCHAR from, WCHAR to) {
-        std::wstring out = s;
-        for (WCHAR &c : out) {
-            if (c == from) c = to;
-        }
-        return out;
-    };
-
-    // Build variants (keep raw path separately and apply truncation to the displayed part)
-    std::wstring rawPath = firstPath;
-    std::wstring winslash = replace_char(rawPath, L'\\', L'/');
+    std::wstring rawPath = paths__.empty() ? L"" : paths__[0].buf;
 
     // (&A) C:\DIR\NAME
     const std::wstring prefixA = L"(&A) ";
@@ -236,45 +127,27 @@ STDMETHODIMP CCopyPathMenu::QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT i
 
     // (&S) C:/DIR/NAME
     const std::wstring prefixS = L"(&S) ";
+    const std::wstring winslash = convert_path_from_win_to_winslash(rawPath);
     std::wstring winslashLabel = prefixS + TruncateMiddle(winslash, MAX_LABEL_LEN);
 
     // (&D) file:///C:/DIR/NAME
     const std::wstring prefixD = L"(&D) ";
-    std::wstring fileProtoLabel = prefixD + TruncateMiddle(L"file:///" + winslash, MAX_LABEL_LEN);
+    std::wstring fileProtoPath = convert_path_from_win_to_fileprotocal(rawPath);
+    std::wstring fileProtoLabel = prefixD + TruncateMiddle(fileProtoPath, MAX_LABEL_LEN);
 
     // (&F) C:\\DIR\\NAME  (escaped backslashes)
-    std::wstring winEscaped;
-    for (WCHAR c : rawPath) {
-        if (c == L'\\') {
-            winEscaped.append(L"\\\\");
-        } else {
-            winEscaped.push_back(c);
-        }
-    }
     const std::wstring prefixF = L"(&F) ";
+    std::wstring winEscaped = convert_path_from_win_to_winescaped(rawPath);
     std::wstring winEscapedLabel = prefixF + TruncateMiddle(winEscaped, MAX_LABEL_LEN);
 
     // (&G) /C/DIR/NAME
-    std::wstring unixPath;
-    size_t len = rawPath.length();
-    size_t i2 = 0;
-    if (len >= 2 && rawPath[1] == L':') {
-        unixPath.push_back(L'/');
-        unixPath.push_back(rawPath[0]);
-        i2 = 2;
-    }
-    for (; i2 < len; i2++) {
-        WCHAR c = rawPath[i2];
-        if (c == L'\\') unixPath.push_back(L'/');
-        else unixPath.push_back(c);
-    }
     const std::wstring prefixG = L"(&G) ";
+	std::wstring unixPath = convert_path_from_win_to_unix(rawPath);
     std::wstring unixLabel = prefixG + TruncateMiddle(unixPath, MAX_LABEL_LEN);
 
     // (&Q) NAME
-    size_t pos = rawPath.find_last_of(L'\\');
-    std::wstring namePart = (pos == std::wstring::npos) ? rawPath : rawPath.substr(pos + 1);
     const std::wstring prefixQ = L"(&Q) ";
+	std::wstring namePart = convert_path_from_win_to_name(rawPath);
     std::wstring nameLabel = prefixQ + TruncateMiddle(namePart, MAX_LABEL_LEN);
 
     // (&W) /mnt/c/dir/name  (WSL style)

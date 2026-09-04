@@ -1,4 +1,9 @@
 #pragma once
 #include "pch.h"
 
+std::wstring convert_path_from_win_to_winslash(const std::wstring& win_path);
+std::wstring convert_path_from_win_to_fileprotocal(const std::wstring& win_path);
+std::wstring convert_path_from_win_to_winescaped(const std::wstring& win_path);
+std::wstring convert_path_from_win_to_unix(const std::wstring& win_path);
+std::wstring convert_path_from_win_to_name(const std::wstring& win_path);
 std::wstring convert_path_from_win_to_wsl(const std::wstring& win_path);

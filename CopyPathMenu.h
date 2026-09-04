@@ -75,6 +75,22 @@ class ATL_NO_VTABLE CCopyPathMenu : public CComObjectRootEx<CComSingleThreadMode
     std::vector<FILEPATH> paths__;
     std::wstring buf__;
     HBITMAP hIcon__;
+
+    std::wstring ConvertPaths(std::wstring (*converter)(const std::wstring&)) {
+        std::wstring res;
+        size_t size = paths__.size();
+        for (size_t i = 0; i < size; i++) {
+            if (converter != nullptr) {
+                std::wstring converted = converter(paths__[i].buf);
+                res += converted;
+            } else {
+                res += paths__[i].buf;
+            }
+            res.push_back(L'\n');
+        }
+        res.back() = L'\0';
+        return res;
+    }
 };
 
 OBJECT_ENTRY_AUTO(__uuidof(CopyPathMenu), CCopyPathMenu)
