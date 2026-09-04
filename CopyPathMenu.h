@@ -64,13 +64,7 @@ class ATL_NO_VTABLE CCopyPathMenu : public CComObjectRootEx<CComSingleThreadMode
 
     STDMETHODIMP GetCommandString(UINT_PTR idCmd, UINT uType, UINT *pReserved, CHAR *pszName, UINT cchMax);
 
-    private:
-    typedef struct {
-        WCHAR buf[MAX_PATH];
-        SIZE_T size;
-    } FILEPATH;
-
-    std::vector<FILEPATH> paths__;
+    std::vector<std::wstring> paths__;
     HBITMAP hIcon__;
 
     std::wstring ConvertPaths(std::wstring (*converter)(const std::wstring&)) {
@@ -78,10 +72,10 @@ class ATL_NO_VTABLE CCopyPathMenu : public CComObjectRootEx<CComSingleThreadMode
         size_t size = paths__.size();
         for (size_t i = 0; i < size; i++) {
             if (converter != nullptr) {
-                std::wstring converted = converter(paths__[i].buf);
+                std::wstring converted = converter(paths__[i]);
                 res += converted;
             } else {
-                res += paths__[i].buf;
+                res += paths__[i];
             }
             res.push_back(L'\n');
         }

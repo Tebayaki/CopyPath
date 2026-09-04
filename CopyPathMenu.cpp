@@ -19,11 +19,10 @@ CCopyPathMenu::~CCopyPathMenu() {
 STDMETHODIMP CCopyPathMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID) {
     // Right click on background of explorer
     if (pidlFolder != nullptr) {
-        if (paths__.size() != 1) {
-            paths__.resize(1);
-        }
-        if (SHGetPathFromIDListW(pidlFolder, paths__[0].buf)) {
-            paths__[0].size = MAX_PATH;
+        paths__.resize(1);
+        paths__[0].resize(MAX_PATH);
+        if (SHGetPathFromIDListW(pidlFolder, &paths__[0][0])) {
+            paths__[0].resize(wcslen(paths__[0].c_str()));
             return S_OK;
         }
         return E_INVALIDARG;
@@ -47,18 +46,17 @@ STDMETHODIMP CCopyPathMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject
         ReleaseStgMedium(&stg);
         return E_INVALIDARG;
     }
-    if (paths__.size() != filesCnt) {
-        paths__.resize(filesCnt);
-    }
+    paths__.resize(filesCnt);
     for (UINT i = 0; i < filesCnt; i++) {
-        SIZE_T size = DragQueryFileW(hDrop, i, paths__[i].buf, MAX_PATH);
+        paths__[i].resize(MAX_PATH);
+        SIZE_T size = DragQueryFileW(hDrop, i, &paths__[i][0], MAX_PATH);
         if (size == 0) {
             i--;
             filesCnt--;
             paths__.pop_back();
         }
         else {
-            paths__[i].size = size + 1;
+            paths__[i].resize(size);
         }
     }
 
@@ -109,7 +107,7 @@ STDMETHODIMP CCopyPathMenu::QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT i
     HMENU hSubMenu = CreatePopupMenu();
 
     // Prepare display strings using the first selected path (if available)
-    std::wstring rawPath = paths__.empty() ? L"" : paths__[0].buf;
+    std::wstring rawPath = paths__.empty() ? L"" : paths__[0];
 
     // (&A) C:\DIR\NAME
     const std::wstring prefixA = L"(&A) ";
