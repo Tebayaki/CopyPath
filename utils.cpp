@@ -110,7 +110,7 @@ std::wstring ConvertPaths(std::vector<std::wstring> paths, std::wstring (*conver
         }
         res.push_back(L'\n');
     }
-    res.back() = L'\0';
+    res.pop_back();
     return res;
 }
 
