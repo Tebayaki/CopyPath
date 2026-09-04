@@ -26,9 +26,9 @@ std::wstring convert_path_from_win_to_fileprotocal(const std::wstring& win_path)
     }
     DWORD size = static_cast<DWORD>(file_url.size() * 3 + 1);
     std::wstring escaped(size, L'\0');
-    if (!InternetCanonicalizeUrlW(file_url.c_str(), &escaped[0], &size, NULL)) {
+    if (S_OK != UrlEscapeW(file_url.c_str(), &escaped[0], &size, URL_ESCAPE_SPACES_ONLY)) {
         escaped.resize(size);
-        if (!InternetCanonicalizeUrlW(file_url.c_str(), &escaped[0], &size, NULL)) {
+        if (S_OK != UrlEscapeW(file_url.c_str(), &escaped[0], &size, URL_ESCAPE_SPACES_ONLY)) {
             return file_url;
         }
     }
