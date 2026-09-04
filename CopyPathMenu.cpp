@@ -72,25 +72,25 @@ STDMETHODIMP CCopyPathMenu::InvokeCommand(CMINVOKECOMMANDINFO *pici) {
     std::wstring paths;
     switch (LOWORD(pici->lpVerb)) {
         case COPYPATH_MENUITEMID_WIN:
-            paths = ConvertPaths(nullptr);
+            paths = ConvertPaths(paths__, nullptr);
             break;
         case COPYPATH_MENUITEMID_WINSLSH:
-            paths = ConvertPaths(convert_path_from_win_to_winslash);
+            paths = ConvertPaths(paths__, convert_path_from_win_to_winslash);
             break;
         case COPYPATH_MENUITEMID_FILEPROTOCAL:
-            paths = ConvertPaths(convert_path_from_win_to_fileprotocal);
+            paths = ConvertPaths(paths__, convert_path_from_win_to_fileprotocal);
             break;
         case COPYPATH_MENUITEMID_WINESCAPE:
-            paths = ConvertPaths(convert_path_from_win_to_winescaped);
+            paths = ConvertPaths(paths__, convert_path_from_win_to_winescaped);
             break;
         case COPYPATH_MENUITEMID_UNIX:
-            paths = ConvertPaths(convert_path_from_win_to_unix);
+            paths = ConvertPaths(paths__, convert_path_from_win_to_unix);
             break;
         case COPYPATH_MENUITEMID_NAME:
-            paths = ConvertPaths(convert_path_from_win_to_name);
+            paths = ConvertPaths(paths__, convert_path_from_win_to_name);
             break;
         case COPYPATH_MENUITEMID_WSL:
-            paths = ConvertPaths(convert_path_from_win_to_wsl);
+            paths = ConvertPaths(paths__, convert_path_from_win_to_wsl);
             break;
         default:
             return E_INVALIDARG;

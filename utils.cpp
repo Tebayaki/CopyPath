@@ -98,6 +98,22 @@ std::wstring convert_path_from_win_to_wsl(const std::wstring &win_path) {
     return s;
 }
 
+std::wstring ConvertPaths(std::vector<std::wstring> paths, std::wstring (*converter)(const std::wstring&)) {
+    std::wstring res;
+    size_t size = paths.size();
+    for (size_t i = 0; i < size; i++) {
+        if (converter != nullptr) {
+            std::wstring converted = converter(paths[i]);
+            res += converted;
+        } else {
+            res += paths[i];
+        }
+        res.push_back(L'\n');
+    }
+    res.back() = L'\0';
+    return res;
+}
+
 // Helper: truncate a wide string in the middle with ellipsis so total length <= maxLen
 std::wstring TruncateMiddle(const std::wstring &s, size_t maxLen) {
     if (s.size() <= maxLen) return s;
