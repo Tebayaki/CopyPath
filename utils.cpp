@@ -128,7 +128,7 @@ std::wstring TruncateMiddle(const std::wstring &s, size_t maxLen) {
     if (maxLen <= 1) return s.substr(0, maxLen);
     size_t keepLeft = (maxLen - 1) / 2;
     size_t keepRight = (maxLen - 1) - keepLeft;
-    return s.substr(0, keepLeft) + L'…' + s.substr(s.size() - keepRight);
+    return s.substr(0, keepLeft) + L'\u2026' + s.substr(s.size() - keepRight);
 }
 
 BOOL SetClipboardTextW(const WCHAR *text, SIZE_T cch) {
