@@ -13,4 +13,6 @@
 #include <shobjidl.h>
 #include <vector>
 #include <string>
+#pragma comment(lib, "wininet.lib")
+#include <wininet.h>
 #endif //PCH_H

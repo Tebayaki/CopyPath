@@ -15,17 +15,25 @@ std::wstring convert_path_from_win_to_winslash(const std::wstring& win_path) {
 }
 
 // file:///C:/dir/name
-// todo: url encoding
 std::wstring convert_path_from_win_to_fileprotocal(const std::wstring& win_path) {
-    std::wstring fileprotocal_path = L"file:///";
+    std::wstring file_url = L"file:///";
     for (WCHAR c : win_path) {
         if (c == L'\\') {
-            fileprotocal_path.push_back(L'/');
+            file_url.push_back(L'/');
         } else {
-            fileprotocal_path.push_back(c);
+            file_url.push_back(c);
         }
     }
-    return fileprotocal_path;
+    DWORD size = static_cast<DWORD>(file_url.size() * 3 + 1);
+    std::wstring escaped(size, L'\0');
+    if (!InternetCanonicalizeUrlW(file_url.c_str(), &escaped[0], &size, NULL)) {
+        escaped.resize(size);
+        if (!InternetCanonicalizeUrlW(file_url.c_str(), &escaped[0], &size, NULL)) {
+            return file_url;
+        }
+    }
+    escaped.resize(size);
+    return escaped;
 }
 
 // C:\\dir\\name
