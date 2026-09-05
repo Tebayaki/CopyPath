@@ -4,6 +4,7 @@ HKCR
 	{
 		ForceRemove {b15b51a1-607e-453d-8b63-297e9b366d04} = s 'CopyPathMenu class'
 		{
+			val ContextMenuOptIn = s
 			ForceRemove Programmable
 			InprocServer32 = s '%MODULE%'
 			{
