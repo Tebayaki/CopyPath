@@ -69,32 +69,43 @@ STDMETHODIMP CCopyPathMenu::InvokeCommand(CMINVOKECOMMANDINFO *pici) {
     if (HIWORD(pici->lpVerb) != 0) {
         return E_INVALIDARG;
     }
-    std::wstring paths;
-    switch (LOWORD(pici->lpVerb)) {
+
+    WORD verbId = LOWORD(pici->lpVerb);
+    std::wstring wrapper = L"";
+    WORD wrapperFlag = verbId & (COPYPATH_MENUITEMID_DOUBLE_QUOTES | COPYPATH_MENUITEMID_SINGLE_QUOTES);
+    if (wrapperFlag == COPYPATH_MENUITEMID_DOUBLE_QUOTES) {
+        wrapper = L"\"";
+    } else if (wrapperFlag == COPYPATH_MENUITEMID_SINGLE_QUOTES) {
+        wrapper = L"'";
+    }
+
+    std::wstring (*converter)(const std::wstring &) = nullptr;
+    switch (verbId & ~COPYPATH_MENUITEMID_DOUBLE_QUOTES & ~COPYPATH_MENUITEMID_SINGLE_QUOTES) {
         case COPYPATH_MENUITEMID_WIN:
-            paths = ConvertPaths(paths__, nullptr);
+            converter = nullptr;
             break;
         case COPYPATH_MENUITEMID_WINSLSH:
-            paths = ConvertPaths(paths__, convert_path_from_win_to_winslash);
+            converter = convert_path_from_win_to_winslash;
             break;
         case COPYPATH_MENUITEMID_FILEPROTOCAL:
-            paths = ConvertPaths(paths__, convert_path_from_win_to_fileprotocal);
+            converter = convert_path_from_win_to_fileprotocal;
             break;
         case COPYPATH_MENUITEMID_WINESCAPE:
-            paths = ConvertPaths(paths__, convert_path_from_win_to_winescaped);
+            converter = convert_path_from_win_to_winescaped;
             break;
         case COPYPATH_MENUITEMID_UNIX:
-            paths = ConvertPaths(paths__, convert_path_from_win_to_unix);
+            converter = convert_path_from_win_to_unix;
             break;
         case COPYPATH_MENUITEMID_NAME:
-            paths = ConvertPaths(paths__, convert_path_from_win_to_name);
+            converter = convert_path_from_win_to_name;
             break;
         case COPYPATH_MENUITEMID_WSL:
-            paths = ConvertPaths(paths__, convert_path_from_win_to_wsl);
+            converter = convert_path_from_win_to_wsl;
             break;
         default:
             return E_INVALIDARG;
     }
+    std::wstring paths = ConvertPaths(paths__, converter, wrapper);
     SetClipboardTextW(paths.c_str(), paths.size() + 1);
     return S_OK;
 }
@@ -143,13 +154,31 @@ STDMETHODIMP CCopyPathMenu::QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT i
     std::wstring wslPathDisplay = convert_path_from_win_to_wsl(rawPath);
     std::wstring wslLabel = prefixWSL + TruncateMiddle(wslPathDisplay, MAX_LABEL_LEN);
 
-    AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_WIN, winLabel.c_str());
-    AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_WINSLSH, winslashLabel.c_str());
-    AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_FILEPROTOCAL, fileProtoLabel.c_str());
-    AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_WINESCAPE, winEscapedLabel.c_str());
-    AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_UNIX, unixLabel.c_str());
-    AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_NAME, nameLabel.c_str());
-    AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + COPYPATH_MENUITEMID_WSL, wslLabel.c_str());
+    auto menuItems = {
+        std::make_pair(COPYPATH_MENUITEMID_WIN, winLabel),
+        std::make_pair(COPYPATH_MENUITEMID_WINSLSH, winslashLabel),
+        std::make_pair(COPYPATH_MENUITEMID_FILEPROTOCAL, fileProtoLabel),
+        std::make_pair(COPYPATH_MENUITEMID_WINESCAPE, winEscapedLabel),
+        std::make_pair(COPYPATH_MENUITEMID_UNIX, unixLabel),
+        std::make_pair(COPYPATH_MENUITEMID_NAME, nameLabel),
+        std::make_pair(COPYPATH_MENUITEMID_WSL, wslLabel)
+    };
+
+    HMENU hSubMenuDoubleQuotes = CreatePopupMenu();
+    for (const auto &item : menuItems) {
+        AppendMenuW(hSubMenuDoubleQuotes, MF_STRING, (UINT_PTR)idCmdFirst + (COPYPATH_MENUITEMID_DOUBLE_QUOTES | item.first), (L"\"" + item.second + L"\"").c_str());
+    }
+
+    HMENU hSubMenuSingleQuotes = CreatePopupMenu();
+    for (const auto &item : menuItems) {
+        AppendMenuW(hSubMenuSingleQuotes, MF_STRING, (UINT_PTR)idCmdFirst + (COPYPATH_MENUITEMID_SINGLE_QUOTES | item.first), (L"'" + item.second + L"'").c_str());
+    }
+
+    for (const auto &item : menuItems) {
+        AppendMenuW(hSubMenu, MF_STRING, (UINT_PTR)idCmdFirst + item.first, item.second.c_str());
+    }
+    AppendMenuW(hSubMenu, MF_POPUP, (UINT_PTR)hSubMenuDoubleQuotes, L"(&Z) Copy Path with \"Double Quotes\"");
+    AppendMenuW(hSubMenu, MF_POPUP, (UINT_PTR)hSubMenuSingleQuotes, L"(&X) Copy Path with 'Single Quotes'");
 
     hIcon__ = CreateBitmap(COPYPATHMENU_LOGO_WIDTH, COPYPATHMENU_LOGO_HEIGHT, 1, 1, COPYPATHMENU_LOGO);
 

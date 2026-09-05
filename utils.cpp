@@ -106,15 +106,15 @@ std::wstring convert_path_from_win_to_wsl(const std::wstring &win_path) {
     return s;
 }
 
-std::wstring ConvertPaths(std::vector<std::wstring> paths, std::wstring (*converter)(const std::wstring&)) {
+std::wstring ConvertPaths(std::vector<std::wstring> paths, std::wstring (*converter)(const std::wstring&), std::wstring wrapper) {
     std::wstring res;
     size_t size = paths.size();
     for (size_t i = 0; i < size; i++) {
         if (converter != nullptr) {
             std::wstring converted = converter(paths[i]);
-            res += converted;
+            res += wrapper + converted + wrapper;
         } else {
-            res += paths[i];
+            res += wrapper + paths[i] + wrapper;
         }
         res.push_back(L'\n');
     }
